@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>远方指南 · 智能旅行攻略生成器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafaf9;
+            color: #1c1c1e;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem 0 2rem 0;
+            border-bottom: 1px solid #e7e5e4;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2e7d64, #1e4a3b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .logo span {
+            font-weight: 300;
+            color: #78716c;
+            background: none;
+            background-clip: unset;
+            -webkit-background-clip: unset;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            background: #e7e5e4;
+            padding: 0.25rem 0.75rem;
+            border-radius: 40px;
+            color: #44403c;
+        }
+
+        .hero {
+            text-align: center;
+            max-width: 720px;
+            margin: 1rem auto 2.5rem auto;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #1e3a2f, #2b5e4f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            color: #57534e;
+            font-size: 1.1rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .input-card {
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
+            padding: 1.8rem 2rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid #ece7e5;
+            transition: box-shadow 0.2s;
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .input-field label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            color: #44403c;
+            letter-spacing: 0.3px;
+        }
+
+        .input-field input, 
+        .input-field select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #e4e0de;
+            border-radius: 1.2rem;
+            background: #fff;
+            transition: 0.2s;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .input-field input:focus,
+        .input-field select:focus {
+            border-color: #2e7d64;
+            box-shadow: 0 0 0 3px rgba(46, 125, 100, 0.2);
+        }
+
+        button {
+            background: #1e3a2f;
+            border: none;
+            color: white;
+            padding: 0.9rem 1.8rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        button:hover {
+            background: #114b3c;
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        button:disabled {
+            background: #b7b2ad;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 2rem;
+        }
+
+        .loader-dot {
+            width: 8px;
+            height: 8px;
+            background: #2e7d64;
+            border-radius: 50%;
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8);}
+            50% { opacity: 1; transform: scale(1.2);}
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 2rem;
+            border: 1px solid #ece7e5;
+            overflow: hidden;
+            margin-top: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s;
+        }
+
+        .result-header {
+            background: #fef9f5;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #f0eae6;
+        }
+
+        .result-header h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .destination-badge {
+            background: #e7e5e4;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: #2d5a4c;
+        }
+
+        .result-content {
+            padding: 2rem;
+        }
+
+        .result-content h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.8rem 0;
+            color: #1e3a2f;
+            border-left: 4px solid #2e7d64;
+            padding-left: 1rem;
+        }
+
+        .result-content h3:first-of-type {
+            margin-top: 0;
+        }
+
+        .result-content p {
+            color: #2d2a27;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .result-content ul, .result-content ol {
+            margin: 0.8rem 0 1rem 1.5rem;
+            color: #403c38;
+        }
+
+        .result-content li {
+            margin: 0.5rem 0;
+        }
+
+        .tips-box {
+            background: #f4f2ef;
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        hr {
+            margin: 1.5rem 0;
+            border: none;
+            height: 1px;
+            background: #e7e5e4;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #a8a29e;
+            font-size: 0.8rem;
+            border-top: 1px solid #e7e5e4;
+            padding-top: 2rem;
+        }
+
+        @media (max-width: 680px) {
+            .container {
+                padding: 1rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .input-card {
+                padding: 1.2rem;
+            }
+            .result-content {
+                padding: 1.2rem;
+            }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #a52a2a;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="navbar">
+        <div class="logo">远方指南<span>｜ai travel</span></div>
+        <div class="badge">✨ 智能攻略 · 实时生成</div>
+    </div>
+
+    <div class="hero">
+        <h1>定制你的下一趟旅程</h1>
+        <p>输入目的地，AI 将为你生成一份兼顾深度与时效的旅行攻略，涵盖行程、美食、交通与贴士。</p>
+    </div>
+
+    <div class="input-card">
+        <div class="input-group">
+            <div class="input-field">
+                <label>✈️ 你想去哪里？</label>
+                <input type="text" id="destination" placeholder="例如：成都、大理、京都、巴黎..." autocomplete="off" value="大理">
+            </div>
+            <div class="input-field">
+                <label>📅 旅行天数 (参考)</label>
+                <select id="days">
+                    <option value="2">2天1夜 · 周末游</option>
+                    <option value="3" selected>3天2夜 · 短途经典</option>
+                    <option value="4">4天3夜 · 深度漫游</option>
+                    <option value="5">5天4夜 · 沉浸之旅</option>
+                </select>
+            </div>
+            <button id="generateBtn">✨ 生成攻略</button>
+        </div>
+        <div style="font-size: 0.7rem; color: #b7b2ad; margin-top: 0.8rem; text-align: right;">⚡ 基于 DeepSeek API 实时生成 · 智能旅行规划</div>
+    </div>
+
+    <div id="resultArea">
+        <div class="result-card" style="background: #fefcf9; text-align: center; padding: 2rem; color: #9c948d;">
+            🌍 输入一个目的地，让 AI 为你编写专属旅行路书。<br>
+            例如：「成都 3日游」— 美食、景点、住宿推荐...
+        </div>
+    </div>
+
+    <div class="footer">
+        ✨ 智能攻略基于大模型生成，建议结合实时天气与官方公告调整行程。
+    </div>
+</div>
+
+<script>
+    // ✅ 已配置你的 DeepSeek API Key
+    const DEEPSEEK_API_KEY = "sk-07eac16d9304445bb9235ad6a5175382";
+    const API_URL = "https://api.deepseek.com/v1/chat/completions";
+    
+    const destinationInput = document.getElementById('destination');
+    const daysSelect = document.getElementById('days');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultArea = document.getElementById('resultArea');
+    
+    function showLoading() {
+        resultArea.innerHTML = `
+            <div class="result-card" style="padding: 2rem;">
+                <div class="loader">
+                    <div class="loader-dot"></div>
+                    <div class="loader-dot"></div>
+                    <div class="loader-dot"></div>
+                </div>
+                <div style="text-align: center; color: #5f6c66;">AI 正在规划详细攻略，请稍候...</div>
+            </div>
+        `;
+    }
+    
+    function showError(msg) {
+        resultArea.innerHTML = `
+            <div class="result-card">
+                <div class="error-message">
+                    ⚠️ ${msg}<br>
+                    请稍后重试或检查网络连接。
+                </div>
+            </div>
+        `;
+    }
+    
+    async function generateTravelGuide(destination, days) {
+        const destinationName = destination.trim();
+        if (!destinationName) {
+            throw new Error("请填写目的地名称");
+        }
+        
+        const daysMap = { '2': '2天1夜', '3': '3天2夜', '4': '4天3夜', '5': '5天4夜' };
+        const daysText = daysMap[days] || `${days}天`;
+        
+        const systemPrompt = `你是一名资深旅行规划师，擅长设计行程深入、体验感强且信息实用的旅行攻略。你的回答总是使用简体中文，格式清晰，结构优美。你需要根据用户提供的目的地和旅行天数，生成一份详细的旅行攻略。攻略必须包含：
+1. 目的地概览 (当地文化、气候概况、最佳季节提示)
+2. 每日行程安排 (按天拆解，包含上午、下午、晚上建议，推荐特色景点和小众体验)
+3. 地道美食推荐 (必吃餐厅或小吃，人均参考)
+4. 交通建议 (如何抵达市区、当地交通tips)
+5. 住宿区域推荐 (不同预算区域及特色)
+6. 实用贴士 (预算参考、语言、支付方式、安全、季节注意事项等)
+
+要求内容详实，有真实的景点/街区名称，文字风格高级简洁，清晰分段，适当使用emoji增加可读性。`;
+        
+        const userPrompt = `请为我生成一份去${destinationName}的${daysText}旅行攻略。目的地: ${destinationName}，旅行天数: ${days}天。请给出详细的游玩路线和建议。`;
+        
+        const requestBody = {
+            model: "deepseek-chat",
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 3000,
+            stream: false
+        };
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            let errorDetail = `API 请求失败 (${response.status})`;
+            try {
+                const errData = await response.json();
+                errorDetail = errData.error?.message || errorDetail;
+            } catch(e) {}
+            throw new Error(errorDetail);
+        }
+        
+        const data = await response.json();
+        const guideText = data.choices[0]?.message?.content;
+        if (!guideText) {
+            throw new Error("AI 未返回有效内容，请稍后再试。");
+        }
+        return guideText;
+    }
+    
+    function renderMarkdownToHTML(text) {
+        if (!text) return "<p>无法生成攻略内容。</p>";
+        
+        let html = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        
+        // 处理标题和格式
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // 将换行转换为段落
+        let paragraphs = html.split(/\n\n+/);
+        let processed = [];
+        
+        for (let para of paragraphs) {
+            para = para.trim();
+            if (!para) continue;
+            
+            // 检测标题行
+            if (para.match(/^#{1,3}\s+/)) {
+                let title = para.replace(/^#{1,3}\s+/, '');
+                processed.push(`<h3>📌 ${title}</h3>`);
+            }
+            else if (para.match(/^[\d一二三四五]+[\.、]\s*/)) {
+                processed.push(`<h3>✨ ${para}</h3>`);
+            }
+            else if (para.match(/^[-*•]\s/)) {
+                let items = para.split(/\n/);
+                let listItems = items.map(item => {
+                    item = item.replace(/^[-*•]\s*/, '');
+                    return `<li>${item}</li>`;
+                }).join('');
+                processed.push(`<ul>${listItems}</ul>`);
+            }
+            else {
+                // 检查是否包含贴士关键词
+                if (para.match(/贴士|提示|注意|预算|建议/)) {
+                    processed.push(`<div class="tips-box">📘 ${para.replace(/\n/g, '<br>')}</div>`);
+                } else {
+                    processed.push(`<p>${para.replace(/\n/g, '<br>')}</p>`);
+                }
+            }
+        }
+        
+        return processed.join('');
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function displayGuide(guideText, destination, days) {
+        const formattedContent = renderMarkdownToHTML(guideText);
+        const daysMap = { '2': '2天1夜', '3': '3天2夜', '4': '4天3夜', '5': '5天4夜' };
+        const daysText = daysMap[days] || `${days}天`;
+        
+        const headerHTML = `
+            <div class="result-header">
+                <h2>
+                    🗺️ ${escapeHtml(destination)} · ${daysText}
+                    <span class="destination-badge">AI 实时生成 ✨</span>
+                </h2>
+                <div style="font-size:0.8rem; margin-top:8px; color:#8c7f73;">基于深度旅行数据 & 当地特色推荐</div>
+            </div>
+            <div class="result-content">
+                ${formattedContent}
+                <hr>
+                <div style="font-size:0.75rem; color:#aaa5a0; text-align:right;">🔍 攻略由 DeepSeek 智能引擎提供 · 请以当地实际信息为准</div>
+            </div>
+        `;
+        resultArea.innerHTML = `<div class="result-card">${headerHTML}</div>`;
+    }
+    
+    async function handleGenerate() {
+        let destination = destinationInput.value.trim();
+        if (destination === "") {
+            alert("请输入目的地，例如：厦门、曼谷、西安");
+            return;
+        }
+        const days = daysSelect.value;
+        showLoading();
+        
+        try {
+            const guide = await generateTravelGuide(destination, days);
+            displayGuide(guide, destination, days);
+        } catch (err) {
+            console.error(err);
+            let errorMsg = err.message || "网络错误或 API 调用失败。";
+            if (errorMsg.includes("API key") || errorMsg.includes("401") || errorMsg.includes("403") || errorMsg.includes("Incorrect API key")) {
+                errorMsg = "API Key 无效或已过期。请检查你的 DeepSeek API Key 是否正确。";
+            } else if (errorMsg.includes("fetch") || errorMsg.includes("network")) {
+                errorMsg = "网络请求失败，请检查网络连接。";
+            } else if (errorMsg.includes("insufficient_quota")) {
+                errorMsg = "API 额度不足，请前往 DeepSeek 平台充值或查看余额。";
+            }
+            showError(errorMsg);
+        }
+    }
+    
+    generateBtn.addEventListener('click', handleGenerate);
+    
+    window.addEventListener('load', () => {
+        console.log('✅ 旅行攻略生成器已就绪，API Key 已配置');
+    });
+</script>
+</body>
+</html>
